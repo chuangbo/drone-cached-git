@@ -16,7 +16,7 @@ EOF
 fi
 
 # cache path
-if [[ ! -z "${CACHE_PATH}" ]]; then
+if [[ -z "${CACHE_PATH}" ]]; then
 	export CACHE_PATH=/git-repo-cache
 fi
 
