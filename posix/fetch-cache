@@ -5,9 +5,9 @@ if [ ! -d .git ]; then
 	mkdir -p $CACHE_PATH/$DRONE_REPO
 	cd $CACHE_PATH/$DRONE_REPO
 
-	if [ ! -d .git ]; then
-		git init --bare
-		git remote add origin ${DRONE_REMOTE_URL}
+	# clone as bare mirror repo
+	if [ ! -f config ]; then
+		git clone --mirror ${DRONE_REMOTE_URL} .
 	fi
 
 	# pull everything. normally this would be slow, but since the repository is cached
