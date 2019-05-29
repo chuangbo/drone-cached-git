@@ -6,11 +6,6 @@ if [[ -f /root/.ssh/id_rsa ]]; then
 	export DRONE_REPO_ORIGIN=${DRONE_GIT_SSH_URL}
 fi
 
-# cache path
-if [[ ! -z "${CACHE_PATH}" ]]; then
-	export CACHE_PATH=/git-repo-cache
-fi
-
 if [ ! -d .git ]; then
 	# go to the shared volume and initialize the repository if necessary and clone
 	mkdir -p $CACHE_PATH/$DRONE_REPO
