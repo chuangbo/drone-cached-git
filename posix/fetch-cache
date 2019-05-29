@@ -1,0 +1,22 @@
+#!/bin/sh
+
+if [ ! -d .git ]; then
+	# go to the shared volume and initialize the repository if necessary and clone
+	mkdir -p $CACHE_PATH/$DRONE_REPO
+	cd $CACHE_PATH/$DRONE_REPO
+
+	if [ ! -d .git ]; then
+		git init --bare
+		git remote add origin ${DRONE_REMOTE_URL}
+	fi
+
+	# pull everything. normally this would be slow, but since the repository is cached
+	# it should be relatively quick.
+	git fetch --all
+
+	# return to our working directory 
+	cd -
+
+	git init
+	git remote add origin $CACHE_PATH/$DRONE_REPO
+fi
