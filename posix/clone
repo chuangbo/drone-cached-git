@@ -15,11 +15,6 @@ password ${DRONE_NETRC_PASSWORD}
 EOF
 fi
 
-# cache path
-if [[ ! -z "${CACHE_PATH}" ]]; then
-	export CACHE_PATH=/git-repo-cache
-fi
-
 # if the ssh_key environment variable exists, write
 # the ssh key and add the netrc machine to the
 # known hosts file.
