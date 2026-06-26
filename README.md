@@ -7,7 +7,7 @@ Drone plugin to clone `git` repositories with cache.
 Build the Docker image with the following commands:
 
 ```
-docker build --rm -f docker/Dockerfile.linux.amd64 -t chuangbo/drone-cached-git .
+docker build --rm -t chuangbo/drone-cached-git .
 ```
 
 ## Usage
