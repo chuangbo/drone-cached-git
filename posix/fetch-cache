@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 export DRONE_REPO_ORIGIN=${DRONE_REMOTE_URL}
 
@@ -11,6 +12,12 @@ if [ ! -d .git ]; then
 	mkdir -p $CACHE_PATH/$DRONE_REPO
 	cd $CACHE_PATH/$DRONE_REPO
 
+	# if the cache directory is not a valid bare repository (e.g. a previous
+	# clone was interrupted), clean it up before re-cloning.
+	if [ -d . ] && ! git rev-parse --is-bare-repository 2>/dev/null; then
+		find . -mindepth 1 -delete
+	fi
+
 	# clone as bare mirror repo
 	if [ ! -f config ]; then
 		git clone --mirror ${DRONE_REPO_ORIGIN} .
@@ -20,7 +27,7 @@ if [ ! -d .git ]; then
 	# it should be relatively quick.
 	git fetch --all
 
-	# return to our working directory 
+	# return to our working directory
 	cd -
 
 	git init
