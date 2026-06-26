@@ -1,129 +1,168 @@
 ---
 kind: pipeline
+type: vm
 name: linux-amd64
 
 platform:
   os: linux
   arch: amd64
 
-steps:
-- name: test
-  image: golang:1.10
-  commands:
-  - cd posix
-  - tar -xf fixtures.tar -C /
-  - go test -v
+pool:
+  use: ubuntu
 
-- name: push
-  image: plugins/docker
-  settings:
-    auto_tag: true
-    auto_tag_suffix: linux-amd64
-    dockerfile: docker/Dockerfile.linux.amd64
-    password:
-      $secret: password
-    repo: drone/git
-    username: drone
-  when:
-    event:
-    - push
-    - tag
+steps:
+  - name: build
+    image: golang:1.10
+    commands:
+      - cd posix
+      - tar -xf fixtures.tar -C /
+      - go test -v
+
+  - name: publish
+    image: plugins/docker:18
+    settings:
+      dockerfile: docker/Dockerfile.linux.amd64
+      repo: drone/git
+      auto_tag: "true"
+      auto_tag_suffix: linux-amd64
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    when:
+      event:
+        - push
+        - tag
 
 ---
 kind: pipeline
+type: vm
 name: linux-arm64
 
 platform:
   os: linux
   arch: arm64
 
-steps:
-- name: test
-  image: golang:1.10
-  commands:
-  - cd posix
-  - tar -xf fixtures.tar -C /
-  - go test -v
+pool:
+  use: ubuntu_arm64
 
-- name: push
-  image: plugins/docker:linux-arm64
-  settings:
-    auto_tag: true
-    auto_tag_suffix: linux-arm64
-    dockerfile: docker/Dockerfile.linux.arm64
-    password:
-      $secret: password
-    repo: drone/git
-    username: drone
-  when:
-    event:
-    - push
-    - tag
+steps:
+  - name: build
+    image: golang:1.10
+    commands:
+      - cd posix
+      - tar -xf fixtures.tar -C /
+      - go test -v
+
+  - name: publish
+    image: plugins/docker:18
+    settings:
+      dockerfile: docker/Dockerfile.linux.arm64
+      repo: drone/git
+      auto_tag: "true"
+      auto_tag_suffix: linux-arm64
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    when:
+      event:
+        - push
+        - tag
 
 ---
 kind: pipeline
-name: linux-arm
+type: vm
+name: windows-1809
 
 platform:
-  os: linux
-  arch: arm
+  os: windows
+  arch: amd64
+
+pool:
+  use: windows
 
 steps:
-- name: test
-  image: golang:1.10
-  commands:
-  - cd posix
-  - tar -xf fixtures.tar -C /
-  - go test -v
+  - name: docker
+    image: plugins/docker
+    settings:
+      dockerfile: docker/Dockerfile.windows.1809
+      repo: drone/git
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      auto_tag: true
+      auto_tag_suffix: windows-1809-amd64
+      daemon_off: true
+      purge: false
 
-- name: push
-  image: plugins/docker:linux-arm
-  settings:
-    auto_tag: true
-    auto_tag_suffix: linux-arm
-    dockerfile: docker/Dockerfile.linux.arm
-    password:
-      $secret: password
-    repo: drone/git
-    username: drone
-  when:
-    event:
+trigger:
+  event:
     - push
-    - tag
 
 ---
 kind: pipeline
-name: after
+type: vm
+name: windows-ltsc2022
+
+platform:
+  os: windows
+  arch: amd64
+
+pool:
+  use: windows-2022
+
+steps:
+  - name: docker
+    image: plugins/docker
+    settings:
+      dockerfile: docker/Dockerfile.windows.ltsc2022
+      repo: drone/git
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      auto_tag: true
+      auto_tag_suffix: windows-ltsc2022-amd64
+      daemon_off: true
+      purge: false
+
+trigger:
+  event:
+    - push
+
+---
+kind: pipeline
+type: vm
+name: manifest
 
 platform:
   os: linux
   arch: amd64
 
+pool:
+  use: ubuntu
+
 steps:
-- name: manifest
-  image: plugins/manifest:1
-  settings:
-    ignore_missing: true
-    password:
-      $secret: password
-    spec: docker/manifest.tmpl
-    username: drone
-  when:
-    branch:
-    - master
-    event:
+  - name: manifest
+    image: plugins/manifest
+    settings:
+      auto_tag: "true"
+      ignore_missing: "true"
+      spec: docker/manifest.tmpl
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+
+trigger:
+  event:
     - push
+    - tag
 
 depends_on:
-- linux-arm
-- linux-arm64
-- linux-amd64
-
----
-kind: secret
-type: external
-data:
-  password: "drone/docker#password"
-  username: "drone/docker#username"
-
-...
+  - linux-amd64
+  - linux-arm64
+  - windows-1809
+  - windows-ltsc2022
